@@ -1,0 +1,15 @@
+# Changes here will be overwritten by Copier
+_commit: v0.2.0
+_src_path: gh:alan-turing-institute/python-project-template
+coc: our_coc
+email: egunn@turing.ac.uk
+full_name: Edward Gunn
+license: Apache
+min_python_version: '3.11'
+org: egunn-turing
+project_name: turing-deinterleaving-challenge
+project_short_description: A set of utilities to support the turing's deinterleaving
+    challenge
+python_name: turing_deinterleaving_challenge
+typing: loose
+url: https://github.com/egunn-turing/turing-deinterleaving-challenge
