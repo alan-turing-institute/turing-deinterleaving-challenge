@@ -27,7 +27,12 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = []
+dependencies = [
+  "h5py",
+  "numpy",
+  "jaxtyping",
+  "pydantic",
+]
 
 [project.optional-dependencies]
 dev = [
