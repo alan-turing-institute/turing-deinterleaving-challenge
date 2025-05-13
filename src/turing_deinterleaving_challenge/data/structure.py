@@ -87,9 +87,9 @@ class PulseTrainMetadata:
 
 
 @dataclass
-class PulseTrainDataset:
+class PulseTrain:
     """
-    PulseTrainDataset is a class that represents a dataset of pulse train data, including metadata, data, and optional labels.
+    PulseTrain is a class that represents a dataset of pulse train data, including metadata, data, and optional labels.
     It provides methods to save and load the dataset to and from an HDF5 file.
 
     Attributes:
@@ -132,7 +132,7 @@ class PulseTrainDataset:
         """
         with h5py.File(path, "w") as f:
             f.create_group("metadata")
-            PulseTrainDataset._save_metadata(f["metadata"], self.metadata)
+            PulseTrain._save_metadata(f["metadata"], self.metadata)
             f.create_dataset(
                 "data",
                 data=self.data,
@@ -185,7 +185,7 @@ class PulseTrainDataset:
                     # Save each nested dataclass
                     for i, nested_instance in enumerate(value):
                         nested_subgroup = list_group.create_group(f"item_{i}")
-                        PulseTrainDataset._save_metadata(
+                        PulseTrain._save_metadata(
                             nested_subgroup, nested_instance
                         )
 
@@ -195,7 +195,7 @@ class PulseTrainDataset:
                 ):
                     # Recursively save nested dataclasses or models
                     nested_group = h5_group.create_group(field.name)
-                    PulseTrainDataset._save_metadata(nested_group, value)
+                    PulseTrain._save_metadata(nested_group, value)
                 elif isinstance(value, str | int | float | bool):
                     h5_group.attrs[field.name] = value
                 elif isinstance(value, list):
@@ -234,7 +234,7 @@ class PulseTrainDataset:
                     # Save each nested model
                     for i, nested_instance in enumerate(value):
                         nested_subgroup = list_group.create_group(f"item_{i}")
-                        PulseTrainDataset._save_metadata(
+                        PulseTrain._save_metadata(
                             nested_subgroup, nested_instance
                         )
 
@@ -244,7 +244,7 @@ class PulseTrainDataset:
                 ):
                     # Recursively save nested models
                     nested_group = h5_group.create_group(field_name)
-                    PulseTrainDataset._save_metadata(nested_group, value)
+                    PulseTrain._save_metadata(nested_group, value)
                 elif isinstance(value, str | int | float | bool):
                     h5_group.attrs[field_name] = value
                 elif isinstance(value, list):
@@ -263,19 +263,19 @@ class PulseTrainDataset:
     @classmethod
     def load(cls, path: Path) -> Self:
         """
-        Load a PulseTrainDataset from an HDF5 file.
+        Load a PulseTrain from an HDF5 file.
 
         Args:
             path (Path): The path to the HDF5 file.
 
         Returns:
-            PulseTrainDataset: An instance of PulseTrainDataset with loaded metadata, data, and labels (if available).
+            PulseTrain: An instance of PulseTrain with loaded metadata, data, and labels (if available).
 
         Raises:
             AssertionError: If the loaded metadata is not an instance of PulseTrainMetadata.
         """
         with h5py.File(path, "r") as f:
-            metadata = PulseTrainDataset._load_metadata(
+            metadata = PulseTrain._load_metadata(
                 f["metadata"], PulseTrainMetadata
             )
             assert isinstance(metadata, PulseTrainMetadata)
@@ -321,7 +321,7 @@ class PulseTrainDataset:
             for key in sorted(h5_group.keys(), key=lambda x: int(x.split("_")[1])):
                 # Ensure we pass the correct dataclass type
                 nested_list.append(
-                    PulseTrainDataset._load_metadata(h5_group[key], metadata_cls)
+                    PulseTrain._load_metadata(h5_group[key], metadata_cls)
                 )
             return nested_list
 
@@ -349,7 +349,7 @@ class PulseTrainDataset:
                             and isinstance(nested_type, type)
                             and issubclass(nested_type, BaseModel)
                         ) or is_dataclass(nested_type):
-                            kwargs[field_name] = PulseTrainDataset._load_metadata(
+                            kwargs[field_name] = PulseTrain._load_metadata(
                                 h5_group[field_name], nested_type
                             )
                         else:
@@ -379,7 +379,7 @@ class PulseTrainDataset:
 
                         # Ensure the nested type is a dataclass before recursion
                         if is_dataclass(nested_type):
-                            kwargs[field.name] = PulseTrainDataset._load_metadata(
+                            kwargs[field.name] = PulseTrain._load_metadata(
                                 h5_group[field.name], nested_type
                             )
                         # Handle fields of type Any or dict-like structures
@@ -399,7 +399,7 @@ class PulseTrainDataset:
                                 if isinstance(nested_group[dataset_name], h5py.Group):
                                     # Recursively load nested groups as dictionaries
                                     nested_dict[dataset_name] = (
-                                        PulseTrainDataset._load_metadata(
+                                        PulseTrain._load_metadata(
                                             nested_group[dataset_name], dict
                                         )
                                     )
@@ -427,7 +427,7 @@ class PulseTrainDataset:
             # Load datasets
             for key in h5_group:
                 if isinstance(h5_group[key], h5py.Group):
-                    result_dict[key] = PulseTrainDataset._load_metadata(
+                    result_dict[key] = PulseTrain._load_metadata(
                         h5_group[key], dict
                     )
                 else:

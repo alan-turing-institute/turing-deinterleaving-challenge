@@ -32,6 +32,11 @@ dependencies = [
   "numpy",
   "jaxtyping",
   "pydantic",
+  "huggingface_hub",
+  "datasets",
+  "torch",
+  "matplotlib",
+  "tqdm",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +44,9 @@ dev = [
   "pytest >=6",
   "pytest-cov >=3",
   "pre-commit",
+]
+demo = [
+  "ipykernel",
 ]
 
 [project.urls]

@@ -6,5 +6,12 @@ from __future__ import annotations
 
 from importlib.metadata import version
 
-__all__ = ("__version__",)
+from .data import PulseTrain, download_dataset, DeinterleavingChallengeDataset
+
+__all__ = (
+    "PulseTrain",
+    "__version__",
+    "download_dataset",
+    "DeinterleavingChallengeDataset",
+)
 __version__ = version(__name__)
