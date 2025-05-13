@@ -27,6 +27,5 @@ def download_dataset(
         repo_id=DATASET_ID,
         repo_type="dataset",
         local_dir=save_dir,
-        local_dir_use_symlinks=False,
         allow_patterns=allow_patterns,
     )

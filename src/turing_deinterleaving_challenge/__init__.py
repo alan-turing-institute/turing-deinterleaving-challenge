@@ -6,13 +6,27 @@ from __future__ import annotations
 
 from importlib.metadata import version
 
-from .data import PulseTrain, download_dataset, DeinterleavingChallengeDataset
+from .data import DeinterleavingChallengeDataset, PulseTrain, download_dataset
 from .models import Deinterleaver, evaluate_model_on_dataset
+from .visualisation import (
+    plot_data,
+    plot_pdws,
+    plot_pulse_train,
+    plot_true_vs_predicted_features,
+    scatter_features,
+)
 
 __all__ = (
+    "Deinterleaver",
+    "DeinterleavingChallengeDataset",
     "PulseTrain",
     "__version__",
     "download_dataset",
-    "DeinterleavingChallengeDataset",
+    "evaluate_model_on_dataset",
+    "plot_data",
+    "plot_pdws",
+    "plot_pulse_train",
+    "plot_true_vs_predicted_features",
+    "scatter_features",
 )
 __version__ = version(__name__)

@@ -38,6 +38,7 @@ dependencies = [
   "matplotlib",
   "tqdm",
   "scikit-learn",
+  "distinctipy",
 ]
 
 [project.optional-dependencies]
