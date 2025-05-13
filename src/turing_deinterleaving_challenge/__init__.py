@@ -7,6 +7,7 @@ from __future__ import annotations
 from importlib.metadata import version
 
 from .data import PulseTrain, download_dataset, DeinterleavingChallengeDataset
+from .models import Deinterleaver, evaluate_model_on_dataset
 
 __all__ = (
     "PulseTrain",

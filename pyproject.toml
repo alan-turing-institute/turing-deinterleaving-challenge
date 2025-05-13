@@ -37,6 +37,7 @@ dependencies = [
   "torch",
   "matplotlib",
   "tqdm",
+  "scikit-learn",
 ]
 
 [project.optional-dependencies]

@@ -54,7 +54,7 @@ class SliceablePulseTrainData:
     def __getitem__(self, sl: slice):
         with h5py.File(self.load_path, "r") as f:
             data = f["data"][sl]
-            labels = f["labels"][sl] if "labels" in f else None
+            labels = f["labels"][sl].squeeze() if "labels" in f else None
         return data, labels
 
 
