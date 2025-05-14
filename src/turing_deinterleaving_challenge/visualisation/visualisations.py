@@ -96,29 +96,40 @@ def plot_pdws(
     )
     return ax1, ax2
 
-def plot_data(data, labels):
-    unique_labels = np.unique(labels)
-    label_indices = {label: i for i, label in enumerate(unique_labels)}
-    num_colors = len(unique_labels)
+def plot_data(data, labels=None):
 
-    colors = distinctipy.get_colors(num_colors)
-    color_map = [colors[label_indices[label]] for label in labels.squeeze()]
-    labels = ["Frequency (MHz)", "Pulse Width (us)", "Angle of Arrival (deg)", "Amplitude (dBm)"]
+    feature_labels = ["Frequency (MHz)", "Pulse Width (us)", "Angle of Arrival (deg)", "Amplitude (dBm)"]
     plt.figure(figsize=(16,8))
+
+    if labels is not None:
+        unique_labels = np.unique(labels)
+        label_indices = {label: i for i, label in enumerate(unique_labels)}
+        num_colors = len(unique_labels)
+
+        colors = distinctipy.get_colors(num_colors)
+        color_map = [colors[label_indices[label]] for label in labels.squeeze()]
+    else:
+        color_map = 'blue'
+
     for i in range(4):
         plt.subplot(2, 2, i + 1)
         plt.xlabel("Time of Arrival (us)")
-        plt.ylabel(labels[i])
+        plt.ylabel(feature_labels[i])
         plt.scatter(data[:, 0], data[:, i+1], c=color_map, s=10)
 
-def plot_pulse_train(pulse_train: PulseTrain):
+def plot_pulse_train(pulse_train: PulseTrain, plot_labels):
     """
     Plot the features of a pulse train.
     """
     plt.figure(figsize=(12, 8))
     features = pulse_train.data
-    labels = pulse_train.labels.squeeze()
 
-    plot_data(features, labels)
-    plt.suptitle("Pulse Train Features")
+
+    if plot_labels:
+        labels = pulse_train.labels.squeeze()
+        plot_data(features, labels)
+        plt.suptitle("Pulse Train Features with Ground truth labels")
+    else:
+        plot_data(features, labels=None)
+        plt.suptitle("Pulse Train Features without labels")
     plt.show()
