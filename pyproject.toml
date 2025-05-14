@@ -49,6 +49,7 @@ dev = [
 ]
 demo = [
   "ipykernel",
+  "ipywidgets",
 ]
 
 [project.urls]
