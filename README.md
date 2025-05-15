@@ -63,7 +63,7 @@ train_dataset = DeinterleavingChallengeDataset(
     max_emitters=5       # Optional: filter by maximum emitter count
 )
 
-# Access data samples and labels for training, evaluation etc.
+# Access data as a numpy array samples and labels for training, evaluation etc. 
 data, labels = train_dataset[0]
 ```
 
