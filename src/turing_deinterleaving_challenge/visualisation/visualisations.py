@@ -58,30 +58,32 @@ def plot_pdws(
         "toa": 0,
         "f": 1,
         "pw": 2,
-        "a": 3,
-        "aoa": 4,
+        "aoa": 3,
+        "a": 4,
         "ToA": 0,
         "F": 1,
         "PW": 2,
-        "A": 3,
-        "AoA": 4,
+        "AoA": 3,
+        "A": 4,
         "time_of_arrival": 0,
         "frequency": 1,
         "pulse_width": 2,
-        "amplitude": 3,
-        "angle_of_arrival": 4,
+        "angle_of_arrival": 3,
+        "amplitude": 4,
+
         "Time of Arrival": 0,
         "Frequency": 1,
         "Pulse Width": 2,
-        "Amplitude": 3,
-        "Angle of Arrival": 4,
+        "Angle of Arrival": 3,
+        "Amplitude": 4,
     }
     feature_axis_labels = {
         0: "Time of Arrival",
         1: "Frequency",
         2: "Pulse Width",
-        3: "Amplitude",
-        4: "Angle of Arrival",
+        3: "Angle of Arrival",
+        4: "Amplitude",
+   
     }
 
     x_feature_index = features_indices[x_feature]
@@ -99,7 +101,7 @@ def plot_pdws(
 def plot_data(data, labels=None):
 
     feature_labels = ["Frequency (MHz)", "Pulse Width (us)", "Angle of Arrival (deg)", "Amplitude (dBm)"]
-    plt.figure(figsize=(16,8))
+    fig = plt.figure(figsize=(16,8))
 
     if labels is not None:
         unique_labels = np.unique(labels)
@@ -117,19 +119,20 @@ def plot_data(data, labels=None):
         plt.ylabel(feature_labels[i])
         plt.scatter(data[:, 0], data[:, i+1], c=color_map, s=10)
 
+    return fig
+
 def plot_pulse_train(pulse_train: PulseTrain, plot_labels):
     """
     Plot the features of a pulse train.
     """
-    plt.figure(figsize=(12, 8))
+  
     features = pulse_train.data
-
-
     if plot_labels:
         labels = pulse_train.labels.squeeze()
-        plot_data(features, labels)
-        plt.suptitle("Pulse Train Features with Ground truth labels")
+        fig = plot_data(features, labels)
+        fig.suptitle("Pulse Train Features with Ground truth labels")
     else:
-        plot_data(features, labels=None)
-        plt.suptitle("Pulse Train Features without labels")
-    plt.show()
+        fig = plot_data(features, labels=None)
+        fig.suptitle("Pulse Train Features without labels")
+    
+    return fig 
