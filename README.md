@@ -8,6 +8,77 @@ The primary goal of this initiative is to foster collaboration within the radar 
 
 We encourage participation even if you join after the kick-off date. If you are taking part, it would be very appreciated if you **contact the organiser(s)** of the [Alan Turing Institute Machine Learning for Radio Frequency Interest Group](https://www.turing.ac.uk/research/interest-groups/machine-learning-radio-frequency-applications) - Dr Victoria Nockles <vnockles@turing.ac.uk>, for our records.
 
+## Technical Background
+
+### Radar Pulse Deinterleaving Problem
+
+Radar deinterleaving is a critical signal processing task in electronic warfare, surveillance, and radar signal intelligence applications. When multiple radar emitters operate simultaneously within the same electromagnetic environment, their transmitted pulses become interleaved in time, creating complex pulse trains that must be separated and attributed to their originating sources.
+
+The radar pulse deinterleaving problem involves separating radar pulses from multiple unknown emitters present in a single recorded pulse train. This separation task is particularly challenging because:
+
+- The number of active emitters is typically unknown a priori
+- Pulse patterns may be irregular or adaptive
+- Environmental factors introduce noise and measurement uncertainty
+- Real-time processing constraints limit computational complexity
+
+Let $\vec{X} = \lbrace x_{1}, x_{2}, \dots,x_{n} \rbrace$ represent a pulse train containing n pulses from N unknown emitters. The deinterleaving task seeks to partition $\vec{X}$ into N disjoint subsets:
+
+$$\vec{X} = \lbrace U_{1},\dots U_{N} \rbrace$$
+
+where each subset $U_{i}$ contains all pulses originating from emitter i.
+
+### Pulse Descriptor Words (PDWs)
+
+A Pulse Descriptor Word (PDW) is a multi-dimensional feature vector that characterises the measurable parameters of a radar pulse. PDWs serve as the fundamental input for deinterleaving algorithms, providing quantitative descriptions of pulse characteristics.
+
+The standard PDW parameters used in this challenge include:
+
+#### Time of Arrival (ToA)
+- **Definition**: Timestamp when the pulse leading edge is detected
+- **Units**: Microseconds ($\mu s$)
+- **Significance**: Enables temporal pattern analysis and pulse repetition interval (PRI) estimation
+
+#### Centre Frequency (CF)
+- **Definition**: Carrier frequency of the radar pulse
+- **Units**: Megahertz (MHz) or Gigahertz (GHz)
+- **Significance**: Primary discriminator for frequency-agile or fixed-frequency emitters
+
+#### Pulse Width (PW)
+- **Definition**: Duration of the pulse envelope
+- **Units**: Microseconds ($\mu s$)
+- **Significance**: Indicates radar type and operational mode
+
+#### Angle of Arrival (AoA)
+- **Definition**: Spatial direction from which the pulse arrives
+- **Units**: Degrees (°) or radians
+- **Significance**: Provides spatial discrimination between emitters
+
+#### Amplitude/Power
+- **Definition**: Peak or integrated power level of the received pulse
+- **Units**: Decibels (dB) or linear scale
+- **Significance**: Relates to emitter power and propagation distance
+
+### Deinterleaving Approaches
+
+#### Traditional Methods
+- **Histogram-based**: Analyse statistical distributions of PDW parameters (PRI histograms, frequency clustering)
+- **Sequence-based**: Exploit temporal ordering and pattern recognition (PRI sequence matching, Markov models)
+- **Clustering**: Unsupervised learning approaches (K-means, DBSCAN, hierarchical clustering)
+
+#### Modern Deep Learning Approaches
+Recent advances leverage transformer architectures for deinterleaving using metric learning approaches:
+
+- **Sequence-to-sequence models**: Process entire pulse trains simultaneously
+- **Self-attention mechanisms**: Capture long-range dependencies between pulses
+- **Triplet loss training**: Optimises embedding similarity within emitters and dissimilarity between emitters
+- **Synthetic data generation**: Creates controlled training scenarios with known ground truth
+
+Performance is typically evaluated using clustering metrics such as **V-measure** (the primary evaluation metric for this challenge), Adjusted Mutual Information (AMI), and silhouette coefficients.
+
+### Challenge Context
+
+This challenge is inspired by recent research including "Radar Pulse Deinterleaving with Transformer Based Deep Metric Learning" (arXiv:2503.13476), which demonstrates transformer-based approaches achieving 0.882 adjusted mutual information score on synthetic radar pulse data using 5-dimensional PDWs.
+
 ## Installation
 
 ### Recommended Environment Setup
