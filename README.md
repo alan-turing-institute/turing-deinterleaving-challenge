@@ -1,4 +1,4 @@
-# turing-deinterleaving-challenge
+# Turing Deinterleaving Challenge
 
 Welcome to the **turing-deinterleaving-challenge** repository! This project provides a comprehensive suite of utilities to support participants in the Alan Turing Institute's **Radar Pulse Train Deinterleaving Challenge**.
 
@@ -7,6 +7,24 @@ The challenge officially kicked off on **15th May 2025**.
 The primary goal of this initiative is to foster collaboration within the radar deinterleaving community by addressing a common problem and **establishing a benchmark for comparing new methodologies.**
 
 We encourage participation even if you join after the kick-off date. If you are taking part, it would be very appreciated if you **contact the organiser(s)** of the [Alan Turing Institute Machine Learning for Radio Frequency Interest Group](https://www.turing.ac.uk/research/interest-groups/machine-learning-radio-frequency-applications) - Dr Victoria Nockles <vnockles@turing.ac.uk>, for our records.
+
+## Table of Contents
+
+- [Technical Background](#technical-background)
+  - [Radar Pulse Deinterleaving Problem](#radar-pulse-deinterleaving-problem)
+  - [Pulse Descriptor Words (PDWs)](#pulse-descriptor-words-pdws)
+  - [Deinterleaving Approaches](#deinterleaving-approaches)
+  - [Challenge Context](#challenge-context)
+- [Installation](#installation)
+  - [Recommended Environment Setup](#recommended-environment-setup)
+  - [Install the Package](#install-the-package)
+- [Usage](#usage)
+  - [Loading the Dataset](#loading-the-dataset)
+  - [Visualise the Data](#visualise-the-data)
+  - [Directory Structure](#directory-structure)
+  - [Important Class/Function Locations](#important-classfunction-locations)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Technical Background
 
@@ -29,31 +47,36 @@ where each subset $U_{i}$ contains all pulses originating from emitter i.
 
 ### Pulse Descriptor Words (PDWs)
 
-A Pulse Descriptor Word (PDW) is a multi-dimensional feature vector that characterises the measurable parameters of a radar pulse. PDWs serve as the fundamental input for deinterleaving algorithms, providing quantitative descriptions of pulse characteristics.
+A Pulse Descriptor Word (PDW) is a multi-dimensional feature vector that characterizes the measurable parameters of a radar pulse. PDWs serve as the fundamental input for deinterleaving algorithms, providing quantitative descriptions of pulse characteristics.
 
 The standard PDW parameters used in this challenge include:
 
 #### Time of Arrival (ToA)
+
 - **Definition**: Timestamp when the pulse leading edge is detected
 - **Units**: Microseconds ($\mu s$)
 - **Significance**: Enables temporal pattern analysis and pulse repetition interval (PRI) estimation
 
 #### Centre Frequency (CF)
+
 - **Definition**: Carrier frequency of the radar pulse
 - **Units**: Megahertz (MHz) or Gigahertz (GHz)
 - **Significance**: Primary discriminator for frequency-agile or fixed-frequency emitters
 
 #### Pulse Width (PW)
+
 - **Definition**: Duration of the pulse envelope
 - **Units**: Microseconds ($\mu s$)
 - **Significance**: Indicates radar type and operational mode
 
 #### Angle of Arrival (AoA)
+
 - **Definition**: Spatial direction from which the pulse arrives
 - **Units**: Degrees (°) or radians
 - **Significance**: Provides spatial discrimination between emitters
 
 #### Amplitude/Power
+
 - **Definition**: Peak or integrated power level of the received pulse
 - **Units**: Decibels (dB) or linear scale
 - **Significance**: Relates to emitter power and propagation distance
@@ -61,16 +84,18 @@ The standard PDW parameters used in this challenge include:
 ### Deinterleaving Approaches
 
 #### Traditional Methods
-- **Histogram-based**: Analyse statistical distributions of PDW parameters (PRI histograms, frequency clustering)
+
+- **Histogram-based**: Analyze statistical distributions of PDW parameters (PRI histograms, frequency clustering)
 - **Sequence-based**: Exploit temporal ordering and pattern recognition (PRI sequence matching, Markov models)
 - **Clustering**: Unsupervised learning approaches (K-means, DBSCAN, hierarchical clustering)
 
 #### Modern Deep Learning Approaches
+
 Recent advances leverage transformer architectures for deinterleaving using metric learning approaches:
 
 - **Sequence-to-sequence models**: Process entire pulse trains simultaneously
 - **Self-attention mechanisms**: Capture long-range dependencies between pulses
-- **Triplet loss training**: Optimises embedding similarity within emitters and dissimilarity between emitters
+- **Triplet loss training**: Optimizes embedding similarity within emitters and dissimilarity between emitters
 - **Synthetic data generation**: Creates controlled training scenarios with known ground truth
 
 Performance is typically evaluated using clustering metrics such as **V-measure** (the primary evaluation metric for this challenge), Adjusted Mutual Information (AMI), and silhouette coefficients.
@@ -89,6 +114,7 @@ Create a new virtual environment (e.g., using conda):
 conda create -n deinterleaving_challenge python=3.11 pip
 conda activate deinterleaving_challenge
 ```
+
 *Note: The package requires Python >=3.11.*
 
 ### Install the Package
@@ -96,11 +122,13 @@ conda activate deinterleaving_challenge
 Then, install the `turing-deinterleaving-challenge` package using one of the following methods:
 
 #### a. From PyPI (Recommended for most users)
- ```bash
+
+```bash
 python -m pip install turing-deinterleaving-challenge
 ```
 
 #### b. From Source
+
 ```bash
 git clone https://github.com/egunn-turing/turing-deinterleaving-challenge
 cd turing-deinterleaving-challenge
@@ -108,6 +136,7 @@ python -m pip install .
 ```
 
 #### c. In Development Mode
+
 If you are contributing to the codebase or editing the Jupyter notebook `demo.ipynb`, install the package in development mode:
 
 ```bash
@@ -139,7 +168,7 @@ train_dataset = DeinterleavingChallengeDataset(
     max_emitters=5       # Optional: filter by maximum emitter count
 )
 
-# Access data as a numpy array samples and labels for training, evaluation etc. 
+# Access data as a numpy array samples and labels for training, evaluation etc.
 data, labels = train_dataset[0]
 ```
 
@@ -148,6 +177,7 @@ data, labels = train_dataset[0]
 Use the `visualisation/visualisations.py` module to plot the Pulse Descriptor Word (PDW) data in a structured way.
 
 ### Directory Structure
+
 ```bash
 └── src
     └── turing_deinterleaving_challenge
@@ -162,15 +192,14 @@ Use the `visualisation/visualisations.py` module to plot the Pulse Descriptor Wo
             └── visualisations.py
 ```
 
-#### Important Class/Function Locations
-* `data/dataset.py` contains the principal data class, `DeinterleavingChallengeDataset`.
-* `data/load.py` defines a helper function `download_dataset` which downloads the challenge data from the Huggingface hub to a local directory, saving in the `.h5` format.
-* `data/structure.py` defines the `PulseTrain` class, with various methods for saving and loading the data in scripts.
+### Important Class/Function Locations
 
-* `models/model.py` defines the Abstract Base Class that your model solution must wrap into.
-* `models/evaluate.py` contains functions to evaluate your challenge model on the ground truth emitter labels. `evaluate_labels` in particular computes **V measure**, which is the principal evaluation metric of the challenge.
-
-* `visualisation/visualisations.py` contains useful functions for plotting the PDW data in a structured way.
+- `data/dataset.py` contains the principal data class, `DeinterleavingChallengeDataset`.
+- `data/load.py` defines a helper function `download_dataset` which downloads the challenge data from the Hugging Face hub to a local directory, saving in the `.h5` format.
+- `data/structure.py` defines the `PulseTrain` class, with various methods for saving and loading the data in scripts.
+- `models/model.py` defines the Abstract Base Class that your model solution must wrap into.
+- `models/evaluate.py` contains functions to evaluate your challenge model on the ground truth emitter labels. `evaluate_labels` in particular computes **V measure**, which is the principal evaluation metric of the challenge.
+- `visualisation/visualisations.py` contains useful functions for plotting the PDW data in a structured way.
 
 ## Contributing
 
