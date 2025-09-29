@@ -40,11 +40,15 @@ The radar pulse deinterleaving problem involves separating radar pulses from mul
 - Real-time processing constraints limit computational complexity
 
 
-Let $X = \lbrace x_{1}, x_{2}, \dots,x_{n} \rbrace$ represent a pulse train containing n pulses from N unknown emitters. The deinterleaving task seeks to partition $\vec{X}$ into N disjoint subsets:
+Let $X = \lbrace x_{1}, x_{2}, \dots,x_{n} \rbrace$ represent a pulse train containing n pulses from N unknown emitters. The deinterleaving task seeks to partition $X$ into N disjoint subsets:
 
 $$X = \lbrace U_{1},\dots U_{N} \rbrace$$
 
 where each subset $U_{i}$ contains all pulses originating from emitter i.
+
+![Schematic diagram of the radar pulse deinterleaving problem](./assets/TA/Schema.png)
+
+*Figure 1: Schematic illustration of the radar pulse deinterleaving problem, showing how interleaved emitters can be clustered by emitter with feature vector $x_{i}$.* 
 
 ### Pulse Descriptor Words (PDWs)
 
