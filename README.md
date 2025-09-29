@@ -46,7 +46,9 @@ $$X = \lbrace U_{1},\dots U_{N} \rbrace$$
 
 where each subset $U_{i}$ contains all pulses originating from emitter i.
 
-![PDW Schema](.assets/TA/Schema.png)
+<p align="center">
+    <img src=".assets/TA/Schema.png" alt="PDW Schema" style="width:100%; max-width:1000px;">
+</p>
 
 *Figure 1: Schematic illustration of the radar pulse deinterleaving problem, showing how interleaved emitters can be clustered by emitter with feature vector $x_{i}$.* 
 
