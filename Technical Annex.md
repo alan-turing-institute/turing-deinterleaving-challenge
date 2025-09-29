@@ -8,6 +8,10 @@ Radar deinterleaving is a critical signal processing task in electronic warfare,
 
 ### 2.1 Problem Definition
 
+![PDW Schema](assets/Ta/Schema.png)
+
+*Figure 1: Schematic representation of deinterleaving protocol*
+
 The radar pulse deinterleaving problem involves separating radar pulses from multiple unknown emitters present in a single recorded pulse train. This separation task is particularly challenging because:
 
 - The number of active emitters is typically unknown a priori
