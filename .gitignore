@@ -159,3 +159,5 @@ Thumbs.db
 
 # data
 data/
+
+.claude/
