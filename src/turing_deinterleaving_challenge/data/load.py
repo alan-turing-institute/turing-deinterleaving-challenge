@@ -13,6 +13,7 @@ def download_dataset(
     subsets: str | list[str] | None = None, 
     hf_token: str | None = None,
     max_workers: int = 3,
+    **kwargs
 ) -> None:
     """
     Download the dataset from Hugging Face Hub to a local directory.
@@ -41,4 +42,5 @@ def download_dataset(
         allow_patterns=allow_patterns,
         token=hf_token,
         max_workers=max_workers,
+        **kwargs
     )
