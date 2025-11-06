@@ -39,6 +39,7 @@ dependencies = [
   "tqdm",
   "scikit-learn",
   "distinctipy",
+  "python-dotenv"
 ]
 
 [project.optional-dependencies]
