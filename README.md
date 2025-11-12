@@ -1,12 +1,12 @@
 # Turing Deinterleaving Challenge
 
-Welcome to the **turing-deinterleaving-challenge** repository! This project provides a comprehensive suite of utilities to support participants in the Alan Turing Institute's **Radar Pulse Train Deinterleaving Challenge**.
+[![Actions Status][actions-badge]][actions-link]
+[![PyPI version][pypi-version]][pypi-link]
+[![PyPI platforms][pypi-platforms]][pypi-link]
 
-The challenge officially kicked off on **15th May 2025**.
+A set of utilities to support the Alan Turing Institute's  radar pulse train deinterleaving challenge, kicked off on the 15th May 2025. 
 
-The primary goal of this initiative is to foster collaboration within the radar deinterleaving community by addressing a common problem and **establishing a benchmark for comparing new methodologies.**
-
-We encourage participation even if you join after the kick-off date. If you are taking part, it would be very appreciated if you **contact the organiser(s)** of the [Alan Turing Institute Machine Learning for Radio Frequency Interest Group](https://www.turing.ac.uk/research/interest-groups/machine-learning-radio-frequency-applications) - Dr Victoria Nockles <vnockles@turing.ac.uk>, for our records.
+The purpose of this hackathon is to bring the radar deinterleaving community together to work on a common problem, **providing a benchmark by which new methods can be compared against.** As such, you are very welcome to join late, if you are taking part, it would be very appreciated if you **contact the organiser(s)** of the [Alan Turing Institute Machine Learning for Radio Frequency Interest Group](https://www.turing.ac.uk/research/interest-groups/machine-learning-radio-frequency-applications) - Dr Victoria Nockles <vnockles@turing.ac.uk>, for our records.
 
 ## Table of Contents
 
@@ -120,20 +120,20 @@ This challenge is inspired by recent research including "Radar Pulse Deinterleav
 
 ## Installation
 
-### Recommended Environment Setup
+### Recommended
 
-Create a new virtual environment (e.g., using conda):
+Create a new virtual environment e.g., with conda
 
 ```bash
-conda create -n deinterleaving_challenge python=3.11 pip
-conda activate deinterleaving_challenge
+conda create -n deinterleaving_challenge python=3.11
+ pip
 ```
 
 *Note: The package requires Python >=3.11.*
 
 ### Install the Package
 
-Then, install the `turing-deinterleaving-challenge` package using one of the following methods:
+Then **install** the ```turing_deinterleaving_challenge``` package with one of the following:
 
 #### a. From PyPI (Recommended for most users)
 
@@ -153,23 +153,31 @@ python -m pip install .
 
 If you are contributing to the codebase or editing the Jupyter notebook `demo.ipynb`, install the package in development mode:
 
-```bash
-pip install -e ".[demo]"
-```
+If you are just editing the jupyter notebook demo.ipynb,
 
-Alternatively, to install the entire codebase in development mode:
+ ```pip install -e ".[demo]"```
 
-```bash
-pip install -e .
-```
+or to install the entire codebase in development mode.
 
-This allows you to make edits to the code without needing to reinstall the package. Note that any changes to imported classes/functions require you to **restart the Jupyter notebook kernel.**
+```pip install -e .```
+
+ This means that after edits to the code, you do not have to reinstall the package. Note that, regardless any edits you make to imported classes/functions you will have to **restart the Jupyter notebook kernel.**
+
 
 ## Usage
 
-See the Jupyter notebook `demo.ipynb` for a detailed walkthrough of this codebase and the challenge data.
+See the jupyter notebook ```demo.ipynb``` for a detailed walkthrough of this codebase & the challenge data.
 
 ### Loading the Dataset
+
+First, copy .env.example as .env
+
+```bash
+cp .env.example .env
+```
+
+Next, please [generate a huggingface token](https://huggingface.co/settings/tokens) and place it in the .env
+
 
 ```python
 from turing_deinterleaving_challenge import DeinterleavingChallengeDataset
@@ -186,9 +194,8 @@ train_dataset = DeinterleavingChallengeDataset(
 data, labels = train_dataset[0]
 ```
 
-### Visualise the Data
+### Visualise the data
 
-Use the `visualisation/visualisations.py` module to plot the Pulse Descriptor Word (PDW) data in a structured way.
 
 ### Directory Structure
 
@@ -205,6 +212,10 @@ Use the `visualisation/visualisations.py` module to plot the Pulse Descriptor Wo
        └── visualisation
             └── visualisations.py
 ```
+#### Important class/function locations
+* ```data/dataset.py``` contains the principal data class, ```DeinterleavingChallengeDataset```.
+* ```data/load.py``` defines a helper function ```download_dataset``` which downloads the challenge data from the Huggingface hub to a local directory, saving in the .h5 format.
+* ```data/structure.py``` defines the ```PulseTrain``` class, with various methods for saving & loading of the data in scripts.
 
 ### Important Class/Function Locations
 
@@ -215,6 +226,7 @@ Use the `visualisation/visualisations.py` module to plot the Pulse Descriptor Wo
 - `models/evaluate.py` contains functions to evaluate your challenge model on the ground truth emitter labels. `evaluate_labels` in particular computes **V measure**, which is the principal evaluation metric of the challenge.
 - `visualisation/visualisations.py` contains useful functions for plotting the PDW data in a structured way.
 
+* ```visualisation/visualisations.py``` contains useful functions for plotting the PDW data in a structured way.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on how to contribute.
@@ -222,6 +234,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on how to contribute.
 ## License
 
 Distributed under the terms of the [Apache license](LICENSE).
+
 
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/egunn-turing/turing-deinterleaving-challenge/workflows/CI/badge.svg
