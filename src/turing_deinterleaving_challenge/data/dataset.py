@@ -20,6 +20,7 @@ class DeinterleavingChallengeDataset(Dataset):
         local_path: Path | None = None,
         min_emitters: int | None = None,
         max_emitters: int | None = None,
+        **kwargs
     ):
         # Validate and set basic parameters
         self._validate_subset(subset)
@@ -29,7 +30,7 @@ class DeinterleavingChallengeDataset(Dataset):
         self.max_emitters = max_emitters
 
         # Set up dataset path
-        self.local_path = local_path or download_dataset(subsets=subset)
+        self.local_path = local_path or download_dataset(subsets=subset, **kwargs)
 
         # Load and analyze data files
         self.data_files = self._get_sorted_data_files()
