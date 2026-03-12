@@ -1,57 +1,29 @@
 [build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+    requires = ["hatchling", "hatch-requirements-txt"]
+    build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+    allow-direct-references = true
 
 [project]
-name = "turing-deinterleaving-challenge"
-version = "0.1.0"
-authors = [
-  { name = "Edward Gunn", email = "egunn@turing.ac.uk" },
-]
-description = "A set of utilities to support the turing's deinterleaving challenge"
-readme = "README.md"
-requires-python = ">=3.11"
-classifiers = [
-  "Development Status :: 1 - Planning",
-  "Intended Audience :: Science/Research",
-  "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Topic :: Scientific/Engineering",
-  "Typing :: Typed",
-]
-dependencies = [
-  "h5py",
-  "numpy",
-  "jaxtyping",
-  "pydantic",
-  "huggingface_hub",
-  "datasets",
-  "torch",
-  "matplotlib",
-  "tqdm",
-  "scikit-learn",
-  "distinctipy",
-  "python-dotenv"
-]
+    name = "turing-deinterleaving-challenge"
+    version = "1.3.0"
+    authors = [
+      { name = "Edward Gunn", email = "egunn@turing.ac.uk" },
+      { name = "Ian Groves", email = "igroves@turing.ac.uk" },
+      { name = "Robert Jones", email = "rjones@turing.ac.uk" },
+      { name = "Leo Zeitler", email = "lzeitler@turing.ac.uk" },
+    ]
+    description = "The Turing Deinterleaving Challenge (TDC) aims to provide the radar research community with a unified benchmark and dataset, fulfilling the need for data and model comparison"
+    readme = "README.md"
+    requires-python = ">=3.10"
 
-[project.optional-dependencies]
-dev = [
-  "pytest >=6",
-  "pytest-cov >=3",
-  "pre-commit",
-]
-demo = [
-  "ipykernel",
-  "ipywidgets",
-]
+[tool.hatch.metadata.hooks.requirements_txt]
+    files = ["requirements.txt"]
+
+[tool.hatch.metadata.hooks.requirements_txt.optional-dependencies]
+    dev = ["requirements_dev.txt"]
+    demo = ["requirements_demo.txt"]
 
 [project.urls]
 Homepage = "https://github.com/egunn-turing/turing-deinterleaving-challenge"

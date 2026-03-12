@@ -1,3 +1,4 @@
+from abc import ABC
 from dataclasses import dataclass, fields, is_dataclass
 from datetime import datetime
 from enum import Enum
@@ -65,9 +66,9 @@ class PulseTrainMetadata:
 
     Attributes:
         feature_names (list[str]): A list of feature names.
+        type (PulseTrainType): The type of pulse train.
         receiver (ReceiverParams): Parameters for the receiver.
         transmitters (list[TransmitterParams]): A list of parameters for the transmitters.
-        type (PulseTrainType): The type of pulse train.
         description (str | None): A description of the pulse train. Defaults to None.
         collection_time_s (float | None): The collection time in seconds. Defaults to None.
         num_pulses (int | None): The number of pulses. Defaults to None.
@@ -87,37 +88,40 @@ class PulseTrainMetadata:
 
 
 @dataclass
-class PulseTrain:
+class AbstractPulseTrain(ABC):
     """
-    PulseTrain is a class that represents a dataset of pulse train data, including metadata, data, and optional labels.
-    It provides methods to save and load the dataset to and from an HDF5 file.
+        PulseTrain is a class that represents a dataset of pulse train data, including metadata, data, and optional labels.
+        It provides methods to save and load the dataset to and from an HDF5 file.
 
-    Attributes:
-        metadata (PulseTrainMetadata): Metadata associated with the pulse train data.
-        data (Float[np.ndarray, "seq_len num_features"]): The pulse train data.
-        labels (Float[np.ndarray, "seq_len"] | None): Optional labels for the pulse train data.
+        Attributes:
+            metadata (PulseTrainMetadata): Metadata associated with the pulse train data.
+            data (Float[np.ndarray, "seq_len num_features"]): The pulse train data.
+            labels (Float[np.ndarray, "seq_len"] | None): Optional labels for the pulse train data.
 
-    Methods:
-        save(path: Path):
-            Save the dataset to an HDF5 file at the specified path.
+        Methods:
+            save(path: Path):
+                Save the dataset to an HDF5 file at the specified path.
 
-        _save_metadata(h5_group: h5py.Group, metadata: PulseTrainMetadata):
-            Recursively save a dataclass or a list of dataclasses to an HDF5 group.
+            _save_metadata(h5_group: h5py.Group, metadata: PulseTrainMetadata):
+                Recursively save a dataclass or a list of dataclasses to an HDF5 group.
 
-        load(cls, path: Path) -> Self:
-            Load the dataset from an HDF5 file at the specified path.
+            load(cls, path: Path) -> Self:
+                Load the dataset from an HDF5 file at the specified path.
 
-        load_data_slicable(cls, path: Path) -> SliceablePulseTrainData:
-            Load the dataset from an HDF5 file at the specified path and return a sliceable version of the data.
+            load_data_slicable(cls, path: Path) -> SliceablePulseTrainData:
+                Load the dataset from an HDF5 file at the specified path and return a sliceable version of the data.
 
-        _load_metadata(h5_group: h5py.Group, metadata_cls):
-            Recursively load a dataclass or list of dataclasses from an HDF5 group.
-    """
+            _load_metadata(h5_group: h5py.Group, metadata_cls):
+                Recursively load a dataclass or list of dataclasses from an HDF5 group.
+        """
 
     metadata: PulseTrainMetadata
     data: Float[np.ndarray, "seq_len num_features"]
     labels: Float[np.ndarray, " seq_len"] | None
 
+
+@dataclass
+class PulseTrainSaver(AbstractPulseTrain, ABC):
     def save(self, path: Path):
         """
         Save the dataset to an HDF5 file.
@@ -150,6 +154,94 @@ class PulseTrain:
                 )
 
     @staticmethod
+    def _save_basic_dtypes(h5_group: h5py.Group, field_name: str, value: Any):
+        if isinstance(value, str | int | float | bool):
+            h5_group.attrs[field_name] = value
+        elif isinstance(value, list):
+            # Convert simple lists to numpy arrays
+            h5_group.create_dataset(field_name, data=np.array(value, dtype="S"))
+        elif isinstance(value, np.ndarray):
+            h5_group.create_dataset(field_name, data=value)
+        elif isinstance(value, Enum):
+            h5_group.attrs[field_name] = value.value
+        elif isinstance(value, datetime):
+            h5_group.attrs[field_name] = value.isoformat()
+        else:
+            err = f"Unsupported type {type(value)} for field {field_name}"
+            raise ValueError(err)
+
+    @staticmethod
+    def _save_nested(h5_group: h5py.Group, field_name: str, value: Any):
+        # Create a group for list of nested models
+        list_group = h5_group.create_group(field_name)
+
+        # Save each nested model
+        for i, nested_instance in enumerate(value):
+            nested_subgroup = list_group.create_group(f"{field_name}_{i}")
+            PulseTrainSaver._save_metadata(
+                nested_subgroup, nested_instance
+            )
+
+    @staticmethod
+    def _convert_value(value: Any) -> Any:
+        if isinstance(value, tuple):
+            value = list(value)
+        if isinstance(value, list) and (isinstance(value[0], float) or isinstance(value[0], int)):
+            value = np.array(value)
+        return value
+
+    @staticmethod
+    def _save_pydantic(h5_group: h5py.Group, metadata: BaseModel):
+        if not PYDANTIC_AVAILABLE:
+            return
+
+        # Get all fields in the model
+        model_data = metadata.model_dump()
+
+        # Store model class name for recreation during load
+        h5_group.attrs["__model_class__"] = metadata.__class__.__name__
+
+        for field_name in model_data.keys():
+            # Recursively handle nested models or lists of models
+            value = metadata.__getattribute__(field_name)
+            # --- begin bugfix
+            value = PulseTrainSaver._convert_value(value)
+            # --- end bugfix
+            if isinstance(value, list) and len(value) > 0 and isinstance(value[0], BaseModel):
+                PulseTrainSaver._save_nested(h5_group=h5_group, field_name=field_name, value=value)
+            elif isinstance(value, BaseModel) or isinstance(value, dict):
+                # Recursively save nested models
+                nested_group = h5_group.create_group(field_name)
+                PulseTrainSaver._save_metadata(nested_group, value)
+            else:
+                PulseTrainSaver._save_basic_dtypes(h5_group=h5_group, field_name=field_name, value=value)
+
+    @staticmethod
+    def _save_dataclass(h5_group: h5py.Group, metadata: object):
+        for field in fields(metadata.__class__):  # type: ignore
+            value = getattr(metadata, field.name)
+            # Recursively handle nested dataclasses or lists of dataclasses
+            if (
+                    isinstance(value, list)
+                    and value
+                    and (
+                    is_dataclass(value[0])
+                    or (PYDANTIC_AVAILABLE and isinstance(value[0], BaseModel))
+            )
+            ):
+                PulseTrainSaver._save_nested(h5_group=h5_group, field_name=field.name, value=value)
+
+            # Handle other types
+            elif is_dataclass(value) or (
+                    PYDANTIC_AVAILABLE and isinstance(value, BaseModel)
+            ):
+                # Recursively save nested dataclasses or models
+                nested_group = h5_group.create_group(field.name)
+                PulseTrainSaver._save_metadata(nested_group, value)
+            else:
+                PulseTrainSaver._save_basic_dtypes(h5_group=h5_group, field_name=field.name, value=value)
+
+    @staticmethod
     def _save_metadata(h5_group: h5py.Group, metadata: object):
         """
         Recursively save a dataclass, Pydantic BaseModel, or a list of either to an HDF5 group.
@@ -167,99 +259,14 @@ class PulseTrain:
         """
         # Handle single dataclass instance
         if is_dataclass(metadata):
-            for field in fields(metadata.__class__):  # type: ignore
-                value = getattr(metadata, field.name)
+            PulseTrainSaver._save_dataclass(h5_group=h5_group, metadata=metadata)
 
-                # Recursively handle nested dataclasses or lists of dataclasses
-                if (
-                    isinstance(value, list)
-                    and value
-                    and (
-                        is_dataclass(value[0])
-                        or (PYDANTIC_AVAILABLE and isinstance(value[0], BaseModel))
-                    )
-                ):
-                    # Create a group for list of nested dataclasses
-                    list_group = h5_group.create_group(field.name)
-
-                    # Save each nested dataclass
-                    for i, nested_instance in enumerate(value):
-                        nested_subgroup = list_group.create_group(f"item_{i}")
-                        PulseTrain._save_metadata(
-                            nested_subgroup, nested_instance
-                        )
-
-                # Handle other types
-                elif is_dataclass(value) or (
-                    PYDANTIC_AVAILABLE and isinstance(value, BaseModel)
-                ):
-                    # Recursively save nested dataclasses or models
-                    nested_group = h5_group.create_group(field.name)
-                    PulseTrain._save_metadata(nested_group, value)
-                elif isinstance(value, str | int | float | bool):
-                    h5_group.attrs[field.name] = value
-                elif isinstance(value, list):
-                    # Convert simple lists to numpy arrays
-                    h5_group.create_dataset(field.name, data=np.array(value, dtype="S"))
-                elif isinstance(value, np.ndarray):
-                    h5_group.create_dataset(field.name, data=value)
-                elif isinstance(value, Enum):
-                    h5_group.attrs[field.name] = value.value
-                elif isinstance(value, datetime):
-                    h5_group.attrs[field.name] = value.isoformat()
-                else:
-                    err = f"Unsupported type {type(value)} for field {field.name}"
-                    raise ValueError(err)
-        # Handle Pydantic model
+        # Handle Recursive Pydantic model
         elif PYDANTIC_AVAILABLE and isinstance(metadata, BaseModel):
-            # Get all fields in the model
-            model_data = metadata.model_dump()
+            PulseTrainSaver._save_pydantic(h5_group, metadata)
 
-            # Store model class name for recreation during load
-            h5_group.attrs["__model_class__"] = metadata.__class__.__name__
 
-            for field_name, value in model_data.items():
-                # Recursively handle nested models or lists of models
-                if (
-                    isinstance(value, list)
-                    and value
-                    and (
-                        is_dataclass(value[0])
-                        or (PYDANTIC_AVAILABLE and isinstance(value[0], BaseModel))
-                    )
-                ):
-                    # Create a group for list of nested models
-                    list_group = h5_group.create_group(field_name)
-
-                    # Save each nested model
-                    for i, nested_instance in enumerate(value):
-                        nested_subgroup = list_group.create_group(f"item_{i}")
-                        PulseTrain._save_metadata(
-                            nested_subgroup, nested_instance
-                        )
-
-                # Handle other types
-                elif is_dataclass(value) or (
-                    PYDANTIC_AVAILABLE and isinstance(value, BaseModel)
-                ):
-                    # Recursively save nested models
-                    nested_group = h5_group.create_group(field_name)
-                    PulseTrain._save_metadata(nested_group, value)
-                elif isinstance(value, str | int | float | bool):
-                    h5_group.attrs[field_name] = value
-                elif isinstance(value, list):
-                    # Convert simple lists to numpy arrays
-                    h5_group.create_dataset(field_name, data=np.array(value, dtype="S"))
-                elif isinstance(value, np.ndarray):
-                    h5_group.create_dataset(field_name, data=value)
-                elif isinstance(value, Enum):
-                    h5_group.attrs[field_name] = value.value
-                elif isinstance(value, datetime):
-                    h5_group.attrs[field_name] = value.isoformat()
-                else:
-                    err = f"Unsupported type {type(value)} for field {field_name}"
-                    raise ValueError(err)
-
+class PulseTrainLoader(ABC):
     @classmethod
     def load(cls, path: Path) -> Self:
         """
@@ -302,6 +309,109 @@ class PulseTrain:
         return SliceablePulseTrainData(path)
 
     @staticmethod
+    def _load_nested(h5_group, metadata_cls):
+        nested_list = []
+        for key in sorted(h5_group.keys(), key=lambda x: int(x.split("_")[1])):
+            # Ensure we pass the correct dataclass type
+            nested_list.append(
+                PulseTrainLoader._load_metadata(h5_group[key], metadata_cls)
+            )
+        return nested_list
+
+    @staticmethod
+    def _load_pydantic(h5_group, metadata_cls):
+        if not PYDANTIC_AVAILABLE:
+            raise ValueError("Called pydantic loader but pydantic is not available")
+
+        kwargs = {}
+        field_types = get_type_hints(metadata_cls)
+        for field_name, field_type in field_types.items():
+            if field_name in h5_group.attrs:
+                # Simple attributes
+                kwargs[field_name] = h5_group.attrs[field_name]
+            elif field_name in h5_group:
+                kwargs_h5_group = PulseTrainLoader._load_h5group(h5_group, field_name, field_type)
+                kwargs = {**kwargs, **kwargs_h5_group}
+
+        return metadata_cls(**kwargs)
+
+    @staticmethod
+    def _load_anyclass(h5_group, field_name):
+        # For Any type, load as a dictionary
+        nested_dict = {}
+        nested_group = h5_group[field_name]
+
+        # Load attributes into the dictionary
+        for attr_name, attr_value in nested_group.attrs.items():
+            nested_dict[attr_name] = attr_value
+
+        # Load datasets into the dictionary
+        for dataset_name in nested_group.keys():
+            if isinstance(nested_group[dataset_name], h5py.Group):
+                # Recursively load nested groups as dictionaries
+                nested_dict[dataset_name] = PulseTrainLoader._load_metadata(nested_group[dataset_name], dict)
+            else:
+                nested_dict[dataset_name] = nested_group[dataset_name][()]
+        return nested_dict
+
+    @staticmethod
+    def _load_h5group(h5_group: h5py.Group, field_name, field_type):
+        # Datasets (like lists or nested dataclasses)
+        kwargs = {}
+        if isinstance(h5_group[field_name], h5py.Group):
+            # Determine the correct nested type
+            type_args = get_args(field_type)  # Extract generic args if available
+            nested_type = type_args[0] if type_args else field_type
+
+            # Ensure the nested type is a dataclass before recursion
+            if is_dataclass(nested_type):
+                kwargs[field_name] = PulseTrainLoader._load_metadata(
+                    h5_group[field_name], nested_type
+                )
+            # Handle fields of type Any or dict-like structures
+            elif nested_type == Any or str(nested_type).startswith(
+                    "typing.Any"
+            ):
+                # For Any type, load as a dictionary
+                nested_dict = PulseTrainLoader._load_anyclass(h5_group, field_name)
+                kwargs[field_name] = nested_dict
+            else:
+                err = f"Unsupported nested type {nested_type} for field {field_name}"
+                raise ValueError(err)
+        else:
+            # Simple lists or arrays
+            kwargs[field_name] = h5_group[field_name][()]
+        return kwargs
+
+    @staticmethod
+    def _load_dataclass(h5_group, metadata_cls):
+        kwargs = {}
+        for field in fields(metadata_cls):
+            if field.name in h5_group.attrs:
+                # Simple attributes
+                kwargs[field.name] = h5_group.attrs[field.name]
+            elif field.name in h5_group:
+                h5_group_kwargs = PulseTrainLoader._load_h5group(h5_group, field.name, field.type)
+                kwargs = {**kwargs, **h5_group_kwargs}
+        return metadata_cls(**kwargs)
+
+    @staticmethod
+    def _load_dict(h5_group, metadata_cls):
+        result_dict = {}
+        # Load attributes
+        for attr_name, attr_value in h5_group.attrs.items():
+            result_dict[attr_name] = attr_value
+        # Load datasets
+        for key in h5_group:
+            if isinstance(h5_group[key], h5py.Group):
+                result_dict[key] = PulseTrainLoader._load_metadata(
+                    h5_group[key], dict
+                )
+            else:
+                result_dict[key] = h5_group[key][()]
+        return result_dict
+
+    @staticmethod
     def _load_metadata(h5_group: h5py.Group, metadata_cls):
         """
         Recursively load a dataclass, Pydantic model, or list of either from an HDF5 group
@@ -314,125 +424,44 @@ class PulseTrain:
             Reconstructed dataclass, Pydantic model, or list of either
         """
         # If the input is a group of nested dataclasses (list-like)
-        if isinstance(h5_group, h5py.Group) and any(
-            key.startswith("item_") for key in h5_group
-        ):
-            nested_list = []
-            for key in sorted(h5_group.keys(), key=lambda x: int(x.split("_")[1])):
-                # Ensure we pass the correct dataclass type
-                nested_list.append(
-                    PulseTrain._load_metadata(h5_group[key], metadata_cls)
-                )
-            return nested_list
-
+        if isinstance(h5_group, h5py.Group) and any(key.startswith("item_") for key in h5_group):
+            return PulseTrainLoader._load_nested(h5_group, metadata_cls)
         # Check if this is a Pydantic model
-        if PYDANTIC_AVAILABLE and issubclass(metadata_cls, BaseModel):
-            kwargs = {}
-            field_types = get_type_hints(metadata_cls)
-
-            for field_name, field_type in field_types.items():
-                if field_name in h5_group.attrs:
-                    # Simple attributes
-                    kwargs[field_name] = h5_group.attrs[field_name]
-                elif field_name in h5_group:
-                    # Datasets (like lists or nested models)
-                    if isinstance(h5_group[field_name], h5py.Group):
-                        # Determine the correct nested type
-                        type_args = get_args(
-                            field_type
-                        )  # Extract generic args if available
-                        nested_type = type_args[0] if type_args else field_type
-
-                        # Handle nested models
-                        if (
-                            PYDANTIC_AVAILABLE
-                            and isinstance(nested_type, type)
-                            and issubclass(nested_type, BaseModel)
-                        ) or is_dataclass(nested_type):
-                            kwargs[field_name] = PulseTrain._load_metadata(
-                                h5_group[field_name], nested_type
-                            )
-                        else:
-                            err = f"Unsupported nested type {nested_type} for field {field_name}"
-                            raise ValueError(err)
-                    else:
-                        # Simple lists or arrays
-                        kwargs[field_name] = h5_group[field_name][()]
-
-            return metadata_cls(**kwargs)
-
+        elif PYDANTIC_AVAILABLE and issubclass(metadata_cls, BaseModel):
+            return PulseTrainLoader._load_pydantic(h5_group, metadata_cls)
         # Handle single dataclass
-        if is_dataclass(metadata_cls):
-            kwargs = {}
-            for field in fields(metadata_cls):
-                if field.name in h5_group.attrs:
-                    # Simple attributes
-                    kwargs[field.name] = h5_group.attrs[field.name]
-                elif field.name in h5_group:
-                    # Datasets (like lists or nested dataclasses)
-                    if isinstance(h5_group[field.name], h5py.Group):
-                        # Determine the correct nested type
-                        type_args = get_args(
-                            field.type
-                        )  # Extract generic args if available
-                        nested_type = type_args[0] if type_args else field.type
-
-                        # Ensure the nested type is a dataclass before recursion
-                        if is_dataclass(nested_type):
-                            kwargs[field.name] = PulseTrain._load_metadata(
-                                h5_group[field.name], nested_type
-                            )
-                        # Handle fields of type Any or dict-like structures
-                        elif nested_type == Any or str(nested_type).startswith(
-                            "typing.Any"
-                        ):
-                            # For Any type, load as a dictionary
-                            nested_dict = {}
-                            nested_group = h5_group[field.name]
-
-                            # Load attributes into the dictionary
-                            for attr_name, attr_value in nested_group.attrs.items():
-                                nested_dict[attr_name] = attr_value
-
-                            # Load datasets into the dictionary
-                            for dataset_name in nested_group.keys():
-                                if isinstance(nested_group[dataset_name], h5py.Group):
-                                    # Recursively load nested groups as dictionaries
-                                    nested_dict[dataset_name] = (
-                                        PulseTrain._load_metadata(
-                                            nested_group[dataset_name], dict
-                                        )
-                                    )
-                                else:
-                                    nested_dict[dataset_name] = nested_group[
-                                        dataset_name
-                                    ][()]
-
-                            kwargs[field.name] = nested_dict
-                        else:
-                            err = f"Unsupported nested type {nested_type} for field {field.name}"
-                            raise ValueError(err)
-                    else:
-                        # Simple lists or arrays
-                        kwargs[field.name] = h5_group[field.name][()]
-
-            return metadata_cls(**kwargs)
-
+        elif is_dataclass(metadata_cls):
+            return PulseTrainLoader._load_dataclass(h5_group, metadata_cls)
         # Special case for loading into a dictionary (when metadata_cls is dict)
-        if metadata_cls is dict:
-            result_dict = {}
-            # Load attributes
-            for attr_name, attr_value in h5_group.attrs.items():
-                result_dict[attr_name] = attr_value
-            # Load datasets
-            for key in h5_group:
-                if isinstance(h5_group[key], h5py.Group):
-                    result_dict[key] = PulseTrain._load_metadata(
-                        h5_group[key], dict
-                    )
-                else:
-                    result_dict[key] = h5_group[key][()]
-            return result_dict
+        elif metadata_cls is dict:
+            return PulseTrainLoader._load_dict(h5_group, metadata_cls)
+        else:
+            err = f"Unsupported dataclass type {metadata_cls}"
+            raise ValueError(err)
 
-        err = f"Unsupported dataclass type {metadata_cls}"
-        raise ValueError(err)
+
+class PulseTrain(PulseTrainSaver, PulseTrainLoader):
+    """
+    Load, save and interact with h5 pulse trian data. Contains the pulse train data, associated pulse train labels,
+    and metadata. Loader and saver functions are inherited from parent classes.
+
+    Parameters
+    ----------
+    data: np.ndarray
+        Pulse train data
+    labels: np.ndarray
+        Pulse train labels
+    metadata: PulseTrainMetadata
+        PulseTrain metadata
+    """
+    def __init__(
+            self,
+            data: Float[np.ndarray, "seq_len num_features"],
+            labels: Float[np.ndarray, " seq_len"] | None,
+            metadata: PulseTrainMetadata,
+    ):
+        super(PulseTrain, self).__init__(
+            data=data,
+            metadata=metadata,
+            labels=labels,
+        )

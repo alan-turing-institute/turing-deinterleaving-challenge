@@ -1,12 +1,11 @@
 import os
-from dotenv import load_dotenv
 
 from pathlib import Path
 from huggingface_hub import snapshot_download
 
-load_dotenv()
-DATASET_ID = "egunn-turing/turing-deinterleaving-challenge"
-
+DATASET_ID = "egunn-turing/turing-deinterleaving-challenge"  # TODO
+HF_TOKEN_VAR_NAME = "HUGGING_FACE_TOKEN"
+SUBSET_NAMES = ["train", "test", "validation"]  # TODO
 
 def download_dataset(
     *, save_dir: Path | None = None, 
@@ -19,19 +18,20 @@ def download_dataset(
     Download the dataset from Hugging Face Hub to a local directory.
     """
     if hf_token is None:
-        hf_token = os.getenv("HUGGING_FACE_TOKEN")
+        from dotenv import load_dotenv
+        load_dotenv()
+        hf_token = os.getenv(HF_TOKEN_VAR_NAME)
         if hf_token is None:
-            print('Please ensure your .env file contains your HUGGING_FACE_TOKEN. Without may cause rate limiting issues.')
+            print(f'Please ensure your .env file contains your {HF_TOKEN_VAR_NAME}. Without may cause rate limiting issues.')
 
-    valid_subsets = ["train", "test", "validation"]
     if subsets is None:
         allow_patterns = ["*.h5"]
     else:
         if isinstance(subsets, str):
             subsets = [subsets]
         for subset in subsets:
-            if subset not in valid_subsets:
-                err = f"Invalid subset: {subset}. Valid subsets are: {valid_subsets}"
+            if subset not in SUBSET_NAMES:
+                err = f"Invalid subset: {subset}. Valid subsets are: {SUBSET_NAMES}"
                 raise ValueError(err)
         allow_patterns = list({f"{subset}/*.h5" for subset in subsets})
 
