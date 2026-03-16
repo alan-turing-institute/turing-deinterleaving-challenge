@@ -4,32 +4,53 @@ import numpy as np
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from .load import download_dataset
+from .load import download_dataset, SUBSET_NAMES
 from .structure import PulseTrain
 
 
 class DeinterleavingChallengeDataset(Dataset):
     """
     A dataset class for the deinterleaving challenge.
+
+    Parameters
+    ----------
+    local_path: Path | None
+        Path to already downloaded dataset. This is the parent directory of the h5 files that are to be loaded.
+        There's no need to specify the subset if you have set the local_path. If local_path=None, the dataset
+        will be downloaded from HuggingFace if not already cached. Please set the type of subset that you want to load.
+    window_length: int | None
+        Window dataset over all pulse trains. If not set, pulse trains are not windowed and of varying length
+    min_emitters: int
+        Minimum numbers of emitters present per window (or pulse train if window_length is None).
+    max_emitters: int
+        Maximum numbers of emitters present per window (or pulse train if window_length is None).
+    subset: str
+        Type of subset to be loaded from the dataset if local_path is unspecified
+    **kwargs: dict
+        Additional keyword arguments passed to HuggingFace downloader
     """
 
     def __init__(
         self,
-        subset: str,
-        window_length=None,
-        local_path: Path | None = None,
-        min_emitters: int | None = None,
-        max_emitters: int | None = None,
+            local_path: Path | None = None,
+            window_length: int | None = None,
+            min_emitters: int | None = None,
+            max_emitters: int | None = None,
+            subset: str = "test",
+            **kwargs
     ):
         # Validate and set basic parameters
-        self._validate_subset(subset)
-        self.subset = subset
         self.window_length = window_length
         self.min_emitters = min_emitters
         self.max_emitters = max_emitters
 
         # Set up dataset path
-        self.local_path = local_path or download_dataset(subsets=subset)
+        self.local_path = local_path or download_dataset(subsets=subset, **kwargs)
+        if not local_path:
+            self._validate_subset(subset)
+            self.subset = subset
+        else:
+            self.subset = "."
 
         # Load and analyze data files
         self.data_files = self._get_sorted_data_files()
@@ -41,10 +62,10 @@ class DeinterleavingChallengeDataset(Dataset):
         # This method will now handle all sample validation and indexing.
         self._setup_dataset_length()
 
-    def _validate_subset(self, subset):
-        allowed_subsets = ["train", "test", "validation"]
-        if subset not in allowed_subsets:
-            err = f"Invalid subset: {subset}. Valid subsets are: {allowed_subsets}"
+    @staticmethod
+    def _validate_subset(subset):
+        if subset not in SUBSET_NAMES:
+            err = f"Invalid subset: {subset}. Valid subsets are: {SUBSET_NAMES}"
             raise ValueError(err)
 
     def _get_sorted_data_files(self):
@@ -127,6 +148,11 @@ class DeinterleavingChallengeDataset(Dataset):
         Returns the number of samples in the dataset.
         """
         return self.length
+
+    def __iter__(self):
+        """iterable"""
+        for idx in range(len(self)):
+            yield self[idx]
 
     def __getitem__(self, idx):
         """

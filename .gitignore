@@ -159,3 +159,7 @@ Thumbs.db
 
 # data
 data/
+jupyter
+.idea
+figures/*mp4
+figures/*pdf
