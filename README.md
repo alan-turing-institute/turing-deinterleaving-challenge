@@ -393,9 +393,7 @@ Performance is typically evaluated using clustering metrics such as **V-measure*
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on how to contribute.
 
-## License
 
-Distributed under the terms of the [Apache license](LICENSE).
 
 
 <!-- prettier-ignore-start -->
@@ -405,3 +403,12 @@ Distributed under the terms of the [Apache license](LICENSE).
 [pypi-platforms]:           https://img.shields.io/pypi/pyversions/turing-deinterleaving-challenge
 [pypi-version]:             https://img.shields.io/pypi/v/turing-deinterleaving-challenge
 <!-- prettier-ignore-end -->
+
+## Authorship
+This code was produced by the Electromagnetic Environment Team, [DARe](https://www.turing.ac.uk/science-innovation/defence-and-national-security/defence-artificial-intelligence-research-dare), The Alan Turing Institute under the GCHQ framework task GD2003, Dstl PO: DSTL0000020119 and GCHQ PO: 4238572. 
+
+Principal Investigator Contact: vnockles@turing.ac.uk
+
+## Disclaimer
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
