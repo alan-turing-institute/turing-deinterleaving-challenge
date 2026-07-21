@@ -184,16 +184,13 @@ Due to the dataset size, you might need to repeat several times. Alternatively, 
 ```python
 from pathlib import Path
 from turing_deinterleaving_challenge import download_dataset
-subset_list = ["train", "validation", "test"]
-hf_token_path = "path/to/hf/token.txt" # path to huggingface token
-with open(hf_token_path, "r") as hf_file:
-    hf_token = hf_file.read()  # read in token file
 
+# make sure to copy .env.example to .env and set your HUGGING_FACE_TOKEN in it
 save_dir = Path("../data")
-train_set_path = download_dataset(
+dataset_path = download_dataset(
     save_dir=save_dir,
-    subsets=subset_list,
-    hf_token=hf_token
+    subsets=["train", "validation", "test"],
+    modes=["stare", "scan"],
 )
 ```
 
